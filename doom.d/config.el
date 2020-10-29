@@ -19,12 +19,12 @@
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
-(setq doom-font (font-spec :family "Iosevka" :size 15))
+(setq doom-font (font-spec :family "Iosevka" :size 18))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-oceanic-next)
+(setq doom-theme 'doom-dracula)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -34,12 +34,86 @@
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type nil)
 
+(defun custom/unset-company-maps (&rest unused)
+  "Set default mappings (outside of company).
+    Arguments (UNUSED) are ignored."
+  (general-def
+    :states 'insert
+    :keymaps 'override
+    "<down>" nil
+    "<up>"   nil
+    "RET"    nil
+    [return] nil
+    "C-n"    nil
+    "C-p"    nil
+    "C-j"    nil
+    "C-k"    nil
+    "C-h"    nil
+    "C-u"    nil
+    "C-d"    nil
+    "C-s"    nil
+    "C-S-s"   (cond ((featurep! :completion helm) nil)
+                    ((featurep! :completion ivy)  nil))
+    "C-SPC"   nil
+    "TAB"     nil
+    [tab]     nil
+    [backtab] nil))
+
+(defun custom/set-company-maps (&rest unused)
+  "Set maps for when you're inside company completion.
+    Arguments (UNUSED) are ignored."
+  (general-def
+    :states 'insert
+    :keymaps 'override
+    "<down>" #'company-select-next
+    "<up>" #'company-select-previous
+    "RET" #'company-complete
+    [return] #'company-complete
+    "C-w"     nil  ; don't interfere with `evil-delete-backward-word'
+    "C-n"     #'company-select-next
+    "C-p"     #'company-select-previous
+    "C-j"     #'company-select-next
+    "C-k"     #'company-select-previous
+    "C-h"     #'company-show-doc-buffer
+    "C-u"     #'company-previous-page
+    "C-d"     #'company-next-page
+    "C-s"     #'company-filter-candidates
+    "C-S-s"   (cond ((featurep! :completion helm) #'helm-company)
+                    ((featurep! :completion ivy)  #'counsel-company))
+    "C-SPC"   #'company-complete-common
+    "TAB"     #'company-complete-common-or-cycle
+    [tab]     #'company-complete-common-or-cycle
+    [backtab] #'company-select-previous    ))
+
+(after! cider
+  (setq cider-repl-pop-to-buffer-on-connect nil)
+  (set-popup-rule! "^\\*cider*" :size 0.45 :side 'right :ttl t :select t :quit t)
+  (add-hook 'company-completion-started-hook 'custom/set-company-maps)
+  (add-hook 'company-completion-finished-hook 'custom/unset-company-maps)
+  (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps)
+  (advice-remove 'cider-eval-last-sexp 'evil-collection-cider-last-sexp)
+  (advice-remove 'cider-eval-last-sexp-and-replace 'evil-collection-cider-last-sexp)
+  (advice-remove 'cider-eval-last-sexp-to-repl 'evil-collection-cider-last-sexp))
+
+(defun try-convert (out)
+  (shell-command-on-region
+   (region-beginning) (region-end)
+   (format "convert.clj %s " out)
+   nil "REPLACE" nil t))
+
+(defun convert-to-edn  () (interactive) (try-convert "edn"))
+(defun convert-to-json () (interactive) (try-convert "json"))
+(defun convert-to-yaml () (interactive) (try-convert "yaml"))
+
 (map!
  (:leader
    (:map (clojure-mode-map clojurescript-mode-map)
      "(" #'paredit-backward-up
      ")" #'paredit-forward-up
      (:prefix ("a" . "apply")
+       "y" #'convert-to-yaml
+       "j" #'convert-to-json
+       "e" #'convert-to-edn
        "n" #'neotree-toggle
        "u" #'clojure-unwind-all
        "l" #'clojure-thread-last-all

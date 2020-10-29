@@ -14,64 +14,7 @@
 ;;      Alternatively, press 'gd' (or 'C-c g d') on a module to browse its
 ;;      directory (for easy access to its source code).
 ;;
-(after! cider
-  (setq cider-repl-pop-to-buffer-on-connect nil)
-  (set-popup-rule! "^\\*cider*" :size 0.45 :side 'right :ttl t :select t :quit t)
-  (add-hook 'company-completion-started-hook 'custom/set-company-maps)
-  (add-hook 'company-completion-finished-hook 'custom/unset-company-maps)
-  (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps))
-
-(defun custom/unset-company-maps (&rest unused)
-  "Set default mappings (outside of company).
-    Arguments (UNUSED) are ignored."
-  (general-def
-    :states 'insert
-    :keymaps 'override
-    "<down>" nil
-    "<up>"   nil
-    "RET"    nil
-    [return] nil
-    "C-n"    nil
-    "C-p"    nil
-    "C-j"    nil
-    "C-k"    nil
-    "C-h"    nil
-    "C-u"    nil
-    "C-d"    nil
-    "C-s"    nil
-    "C-S-s"   (cond ((featurep! :completion helm) nil)
-                    ((featurep! :completion ivy)  nil))
-    "C-SPC"   nil
-    "TAB"     nil
-    [tab]     nil
-    [backtab] nil))
-
-(defun custom/set-company-maps (&rest unused)
-  "Set maps for when you're inside company completion.
-    Arguments (UNUSED) are ignored."
-  (general-def
-    :states 'insert
-    :keymaps 'override
-    "<down>" #'company-select-next
-    "<up>" #'company-select-previous
-    "RET" #'company-complete
-    [return] #'company-complete
-    "C-w"     nil  ; don't interfere with `evil-delete-backward-word'
-    "C-n"     #'company-select-next
-    "C-p"     #'company-select-previous
-    "C-j"     #'company-select-next
-    "C-k"     #'company-select-previous
-    "C-h"     #'company-show-doc-buffer
-    "C-u"     #'company-previous-page
-    "C-d"     #'company-next-page
-    "C-s"     #'company-filter-candidates
-    "C-S-s"   (cond ((featurep! :completion helm) #'helm-company)
-                    ((featurep! :completion ivy)  #'counsel-company))
-    "C-SPC"   #'company-complete-common
-    "TAB"     #'company-complete-common-or-cycle
-    [tab]     #'company-complete-common-or-cycle
-    [backtab] #'company-select-previous    ))
-
+;;
 (doom! :input
        ;;chinese
        ;;japanese
@@ -168,7 +111,7 @@
        ;;common-lisp       ; if you've seen one lisp, you've seen them all
        ;;coq               ; proofs-as-programs
        ;;crystal           ; ruby at the speed of c
-       csharp            ; unity, .NET, and mono shenanigans
+       ;;csharp            ; unity, .NET, and mono shenanigans
        ;;data              ; config/data formats
        ;;(dart +flutter)   ; paint ui and not much else
        ;;elixir            ; erlang done right
